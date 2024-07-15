@@ -3,6 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const app = express();
 const dns = require('dns');
+const validUrl = require('valid-url');
 
 // Basic Configuration
 const port = process.env.PORT || 3000;
@@ -37,15 +38,15 @@ app.listen(port, function() {
 
 app.post('/api/shorturl', (req, res) => {
   const originalUrl = req.body.url;
-  dns.lookup(stripHTTPS(originalUrl), (err, address, family) => {
-    if (err) {
-      res.json({ 'error': 'invalid url' })
-    } else {
-      numberOfUrls++;
-      urlShortened[numberOfUrls] = originalUrl;
-      res.json({ 'original_url': originalUrl, 'short_url': numberOfUrls });
-    }
-  });
+
+  if (validUrl.isWebUri(originalUrl)) {
+    numberOfUrls++;
+    urlShortened[numberOfUrls] = originalUrl;
+    res.json({ 'original_url': originalUrl, 'short_url': numberOfUrls });
+  } else {
+    res.json({ 'error': 'invalid url' });
+  }
+  
 });
 
 app.get('/api/shorturl/:number', (req, res) => {
